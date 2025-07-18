@@ -1,0 +1,541 @@
+/* --- Base styles --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    /* Vibrant, clean, and modern gradient for the background */
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Deep purple to bright blue */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align to top to allow scrolling for multiple timers */
+    padding: 30px; /* Increased padding */
+    color: #f8f8f8; /* Light gray for general text to stand out */
+    overflow-y: auto; /* Allow scrolling */
+}
+
+/* --- Keyframe Animations --- */
+@keyframes fadeInScaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+}
+
+@keyframes numberGlowPop {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        color: #4a6bff;
+    }
+    50% {
+        transform: scale(1.1); /* Pop out more prominently */
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 0 0 50px rgba(74, 107, 255, 0.7); /* Stronger white and blue glow */
+        background-color: #f0f8ff; /* Light blue flash */
+        color: #2575fc; /* Brighter blue color */
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background-color: white;
+        color: #4a6bff;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Container & Header --- */
+.container {
+    width: 100%;
+    max-width: 960px; /* Slightly wider container */
+    background-color: rgba(255, 255, 255, 0.15); /* Semi-transparent white for glassmorphism */
+    border-radius: 20px; /* More rounded corners */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); /* Prominent shadow for depth */
+    padding: 45px; /* Increased padding */
+    text-align: center;
+    margin-top: 50px; /* Push down from the top */
+    backdrop-filter: blur(10px); /* Stronger glassmorphism effect */
+    border: 1px solid rgba(255, 255, 255, 0.25); /* Subtle white border for glass effect */
+    animation: fadeInScaleUp 0.8s ease-out forwards; /* Container entrance animation */
+}
+
+h1 {
+    font-family: 'Poppins', sans-serif; /* Playful, modern font for the title */
+    color: #e0f2f7; /* Very light blue for contrast against the dark gradient background */
+    margin-bottom: 40px; /* More space */
+    font-size: 3.8rem; /* Larger title */
+    font-weight: 700;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4), 0 0 5px rgba(0, 0, 0, 0.6); /* Subtle text glow */
+    letter-spacing: 2px;
+}
+
+/* --- Controls --- */
+.controls {
+    margin-bottom: 35px; /* More space */
+}
+
+.add-timer-btn {
+    background: linear-gradient(45deg, #1ABC9C, #16A085); /* Vibrant turquoise to green gradient */
+    color: white;
+    border: none;
+    padding: 16px 35px; /* Larger, more prominent button */
+    font-size: 1.3rem;
+    border-radius: 35px; /* More rounded pill shape */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(26, 188, 156, 0.5); /* Stronger shadow */
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    position: relative;
+    overflow: hidden; /* For shimmer effect */
+    z-index: 1;
+}
+
+.add-timer-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3); /* Shimmer effect */
+    transition: all 0.5s ease;
+    z-index: -1;
+    transform: skewX(-20deg);
+}
+
+.add-timer-btn:hover::before {
+    left: 100%;
+}
+
+.add-timer-btn:hover {
+    transform: translateY(-7px) scale(1.03); /* Lift and slight enlarge */
+    box-shadow: 0 15px 35px rgba(26, 188, 156, 0.7); /* Enhanced shadow on hover */
+}
+
+/* --- Timers container (Grid for multiple timers) --- */
+.timers-container {
+    display: grid; /* Changed to grid for responsive layout */
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Auto-fit columns, min width 320px */
+    gap: 30px; /* Increased gap */
+    margin-top: 30px;
+    justify-content: center; /* Center items if they don't fill the row */
+}
+
+/* --- Individual timer styles --- */
+.timer-item {
+    background-color: rgba(255, 255, 255, 0.08); /* More transparent for a lighter glass effect */
+    border-radius: 18px; /* More rounded */
+    padding: 30px; /* Increased padding */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle white border */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth hover transition */
+    overflow: hidden; /* Ensures background pseudo-element stays within bounds */
+    animation: popIn 0.6s ease-out forwards; /* Animation for new timers */
+}
+
+.timer-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px; /* A more prominent top accent bar */
+    background: linear-gradient(to right, #FFC107, #FF5722); /* Warm, energetic gradient for accent */
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+}
+
+.timer-item:hover {
+    transform: translateY(-8px); /* More pronounced lift effect */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35); /* Stronger shadow on hover */
+}
+
+.timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 25px; /* Increased margin */
+}
+
+.timer-name {
+    flex-grow: 1;
+    padding: 12px 18px; /* Larger padding */
+    font-size: 1.3rem; /* Larger font */
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border for consistency */
+    border-radius: 10px; /* More rounded */
+    margin-right: 15px; /* Increased margin */
+    text-align: center; /* Center placeholder text */
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.1); /* Transparent background */
+    color: #f0f0f0; /* Light text for input */
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3); /* Inner shadow for depth */
+}
+
+.timer-name::placeholder {
+    color: rgba(255, 255, 255, 0.7); /* Lighter placeholder text */
+}
+
+.timer-name:focus {
+    outline: none;
+    border-color: #FFD700; /* Gold highlight on focus */
+    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.5); /* Soft glowing shadow */
+    background-color: rgba(255, 255, 255, 0.15); /* Slightly less transparent on focus */
+}
+
+.delete-timer {
+    background-color: #e74c3c; /* Striking red */
+    color: white;
+    border: none;
+    width: 45px; /* Larger */
+    height: 45px; /* Larger */
+    border-radius: 50%;
+    font-size: 2rem; /* Larger 'x' */
+    line-height: 1; /* Center the 'x' vertically */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* Prevent shrinking */
+    box-shadow: 0 6px 18px rgba(231, 76, 60, 0.4);
+}
+
+.delete-timer:hover {
+    background-color: #c0392b; /* Darker red on hover */
+    transform: rotate(90deg) scale(1.1); /* Spin and slight enlarge */
+    animation: shake 0.5s ease-in-out; /* Shake effect on hover */
+    box-shadow: 0 10px 25px rgba(231, 76, 60, 0.6);
+}
+
+/* --- Input section styles --- */
+.input-section {
+    margin-bottom: 30px; /* Increased margin */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* Increased gap */
+    width: 100%; /* Ensure full width usage */
+}
+
+.input-section label {
+    font-size: 1.2rem; /* Slightly larger font */
+    color: #ADD8E6; /* Light blue for labels */
+    font-weight: 500;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.input-section .datetime { /* Targeted input specific to this section */
+    padding: 14px 20px; /* Larger padding */
+    font-size: 1.1rem; /* Slightly larger font */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border */
+    border-radius: 10px;
+    width: 100%;
+    max-width: 350px; /* Slightly wider input */
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.05); /* Very transparent */
+    color: #f0f0f0; /* Light text for input */
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3); /* Inner shadow */
+}
+
+/* Styling for date/time input to make it match dark theme */
+/* Note: styling input type="datetime-local" heavily across browsers is tricky */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* Invert color for dark theme visibility */
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+.input-section .datetime:focus {
+    outline: none;
+    border-color: #20c997; /* Teal highlight */
+    box-shadow: 0 0 0 4px rgba(32, 201, 151, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.input-section .start-btn { /* Targeted button specific to this section */
+    background: linear-gradient(45deg, #3498db, #007bff); /* Blue gradient */
+    color: white;
+    border: none;
+    padding: 16px 30px; /* Larger button */
+    font-size: 1.2rem;
+    border-radius: 35px; /* More rounded pill shape */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 250px;
+    box-shadow: 0 10px 25px rgba(52, 152, 219, 0.5);
+    font-weight: 700;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.input-section .start-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    transition: all 0.5s ease;
+    z-index: -1;
+    transform: skewX(-20deg);
+}
+
+.input-section .start-btn:hover::before {
+    left: 100%;
+}
+
+.input-section .start-btn:hover {
+    background: linear-gradient(45deg, #2980b9, #0056b3); /* Darker blue on hover */
+    transform: translateY(-7px) scale(1.03);
+    box-shadow: 0 15px 35px rgba(52, 152, 219, 0.8);
+}
+
+/* --- Error Box Styles --- */
+.error-box {
+    background-color: rgba(204, 234, 83, 0.2); /* Semi-transparent tomato red */
+    color: #FF4500; /* Bright orange-red text */
+    border: 1px solid #FF4500;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-top: 15px; /* Space from the input field */
+    width: 100%;
+    max-width: 350px; /* Same width as datetime input */
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+    opacity: 0; /* Hidden by default */
+    transform: translateY(-10px); /* Slightly move up initially */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.error-box.show {
+    opacity: 1;
+    transform: translateY(0); /* Slide into view */
+}
+
+/* --- Countdown styles --- */
+.countdown-container {
+    margin: 25px 0; /* More margin */
+    width: 100%; /* Ensure it takes full width of parent */
+}
+
+.countdown {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px; /* Increased gap */
+}
+
+.time-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px; /* Wider sections */
+    flex-grow: 1; /* Allows sections to grow */
+    max-width: 130px; /* Max width to prevent overly large sections on wide screens */
+}
+
+.number {
+    font-family: 'Orbitron', sans-serif; /* Futuristic font */
+    font-size: 3.2rem; /* Larger numbers */
+    font-weight: bold;
+    color: #4a6bff; /* Vibrant blue */
+    background-color: white;
+    padding: 12px 22px; /* Larger padding */
+    border-radius: 12px; /* More rounded */
+    min-width: 110px; /* Consistent width */
+    text-align: center;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Clearer shadow */
+    transition: all 0.1s ease-out; /* Faster transition for pop effect */
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Subtle white border */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animation for the numbers when updated */
+.number.animated {
+    animation: numberGlowPop 0.8s ease-out forwards; /* Apply the glow and pop animation */
+}
+
+.label {
+    margin-top: 12px; /* More space */
+    font-size: 1rem; /* Slightly larger label */
+    color: #E0FFFF; /* Bright cyan for labels */
+    text-transform: uppercase;
+    letter-spacing: 2px; /* More spacing */
+    font-weight: 500;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Message styles (for timer completion) --- */
+.message {
+    font-size: 1.7rem; /* Larger message font */
+    margin-top: 25px; /* Increased margin */
+    min-height: 30px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out, color 0.3s ease; /* Smooth transition */
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.message.show {
+    opacity: 1;
+    animation: slideInUp 0.5s ease-out forwards; /* Message slides in */
+}
+
+/* Specific colors for message types */
+.message.success {
+    color: #00FF7F; /* Bright spring green for success */
+}
+
+/* Error messages from script.js validation will use .error-box instead of .message.error */
+/* If you still want a general .message.error for other purposes, keep it, but it might be confusing */
+
+
+/* --- Hidden template --- */
+.timer-template {
+    display: none;
+}
+
+/* --- Responsive design --- */
+@media (max-width: 768px) {
+    .container {
+        padding: 30px;
+        margin-top: 30px;
+    }
+    h1 {
+        font-size: 3.2rem;
+    }
+    .add-timer-btn {
+        padding: 14px 30px;
+        font-size: 1.2rem;
+    }
+    .timers-container {
+        grid-template-columns: 1fr; /* Stack vertically on smaller screens */
+    }
+    .timer-item {
+        padding: 25px;
+    }
+    .timer-name {
+        font-size: 1.2rem;
+        padding: 10px 15px;
+    }
+    .delete-timer {
+        width: 40px;
+        height: 40px;
+        font-size: 1.8rem;
+    }
+    .input-section {
+        gap: 18px;
+    }
+    .input-section label {
+        font-size: 1.1rem;
+    }
+    .input-section .datetime,
+    .input-section .start-btn {
+        padding: 12px 18px;
+        font-size: 1.05rem;
+        max-width: none; /* Allow full width */
+    }
+    .error-box {
+        max-width: none; /* Allow full width */
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+    .number {
+        font-size: 2.5rem;
+        min-width: 80px;
+        padding: 10px 18px;
+    }
+    .time-section {
+        min-width: 90px;
+    }
+    .label {
+        font-size: 0.9rem;
+    }
+    .message {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+    }
+    h1 {
+        font-size: 2.5rem;
+    }
+    .add-timer-btn {
+        padding: 12px 25px;
+        font-size: 1.1rem;
+    }
+    .countdown {
+        gap: 15px; /* Tighter gap on very small screens */
+    }
+    .number {
+        font-size: 2rem;
+        min-width: 70px;
+        padding: 8px 15px;
+    }
+    .time-section {
+        min-width: 80px;
+    }
+    .label {
+        font-size: 0.8rem;
+    }
+    .message {
+        font-size: 1.1rem;
+    }
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Countdown Timer</h1>
+        
+        <div class="controls">
+            <button id="addTimerBtn" class="add-timer-btn">+ Add New Timer</button>
+        </div>
+        
+        <div id="timersContainer" class="timers-container">
+            </div>
+    </div>
+
+    <div id="timerTemplate" class="timer-template">
+        <div class="timer-item">
+            <div class="timer-header">
+                <input type="text" class="timer-name" placeholder="Event Name" value="New Event">
+                <button class="delete-timer">×</button>
+            </div>
+            <div class="input-section">
+                <label>Select Date and Time:</label>
+                <input type="datetime-local" class="datetime" required>
+                <button class="start-btn">Start Countdown</button>
+                <div class="error-box"></div> 
+            </div>
+            <div class="countdown-container">
+                <div class="countdown">
+                    <div class="time-section">
+                        <span class="number days">00</span>
+                        <span class="label">Days</span>
+                    </div>
+                    <div class="time-section">
+                        <span class="number hours">00</span>
+                        <span class="label">Hours</span>
+                    </div>
+                    <div class="time-section">
+                        <span class="number minutes">00</span>
+                        <span class="label">Minutes</span>
+                    </div>
+                    <div class="time-section">
+                        <span class="number seconds">00</span>
+                        <span class="label">Seconds</span>
+                    </div>
+                </div>
+            </div>
+            <div class="message"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

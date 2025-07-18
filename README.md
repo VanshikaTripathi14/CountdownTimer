@@ -37,13 +37,13 @@ That's it! The application will be up and running.
 
 The project is organized into three main files:
 
-
+```
 .
 ├── index.html      # The main HTML file with the structure of the application.
 ├── style.css       # All the styles, animations, and responsive design rules.
 └── script.js       # The JavaScript logic for all functionality.
 
-
+```
 ---
 
 ## 🛠️ Technologies Used

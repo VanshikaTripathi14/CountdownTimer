@@ -93,12 +93,7 @@ async function deleteTimer(timerId) {
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'No, keep it',
-        backdrop: `
-            rgba(0,0,123,0.4)
-            url("https://sweetalert2.github.io/images/nyan-cat.gif")
-            left top
-            no-repeat
-        ` // Optional: Add a fun backdrop for SweetAlert!
+        // Removed the 'backdrop' property that contained the Nyan Cat animation
     });
 
     if (result.isConfirmed) {

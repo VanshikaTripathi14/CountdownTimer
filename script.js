@@ -1,258 +1,232 @@
-// DOM Elements
-const addTimerBtn = document.getElementById('addTimerBtn');
-const timersContainer = document.getElementById('timersContainer');
-const timerTemplate = document.getElementById('timerTemplate');
-
-// Timer management
-let timers = []; // Stores objects for each timer: { id, element, interval }
-
-// --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Ensure initial timer is added after DOM is fully loaded
-    addNewTimer(); 
-});
+    // --- DOM Elements ---
+    const addTimerBtn = document.getElementById('addTimerBtn');
+    const timersContainer = document.getElementById('timersContainer');
+    const timerTemplate = document.getElementById('timerTemplate');
 
-addTimerBtn.addEventListener('click', addNewTimer);
+    // --- Timer State Management ---
+    let timers = []; // Stores objects for each timer: { id, element, interval, targetTime }
+    let audioContextUnlocked = false; // To handle browser audio policies
 
-// --- Functions ---
+    // --- Event Listeners ---
+    addTimerBtn.addEventListener('click', addNewTimer);
 
-function addNewTimer() {
-    // Clone the timer template
-    const newTimer = timerTemplate.cloneNode(true);
-    newTimer.id = ''; // Clear the template ID
-    newTimer.classList.remove('timer-template'); // Remove the template class
-    newTimer.style.display = 'flex'; // Make it visible and use flex for internal layout
+    // --- Functions ---
     
-    // Add to DOM
-    timersContainer.appendChild(newTimer);
+    /**
+     * Shows a toast notification.
+     * @param {string} text The message to display.
+     * @param {boolean} isError True for error style, false for success.
+     */
+    function showToast(text, isError = false) {
+        Toastify({
+            text: text,
+            duration: 3000,
+            close: true,
+            gravity: "top", // `top` or `bottom`
+            position: "right", // `left`, `center` or `right`
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+                background: isError 
+                    ? "linear-gradient(to right, #F44336, #D32F2F)" 
+                    : "linear-gradient(to right, #00b09b, #96c93d)",
+            },
+        }).showToast();
+    }
     
-    // Get elements from the new timer (using newTimer directly as timer-item is its immediate child)
-    const timerElement = newTimer.querySelector('.timer-item');
-    const startBtn = timerElement.querySelector('.start-btn');
-    const deleteBtn = timerElement.querySelector('.delete-timer');
-    const datetimeInput = timerElement.querySelector('.datetime');
-    const messageElement = timerElement.querySelector('.message');
-    const timerNameInput = timerElement.querySelector('.timer-name'); // Get the name input
-    const errorBox = timerElement.querySelector('.error-box'); // Get the new error box
+    /**
+     * Unlocks the browser's audio context on the first user interaction.
+     */
+    function unlockAudio() {
+        if (audioContextUnlocked) return;
+        // A silent sound can be played to activate the audio context
+        const audio = new Audio('sounds/more.mp3');
+        audio.play().then(() => {
+            audioContextUnlocked = true;
+        }).catch(() => {
+            // Even if it fails, we'll try again on completion
+        });
+    }
 
-    // Generate unique ID for the timer
-    const timerId = Date.now().toString();
-    timerElement.dataset.id = timerId;
-    
-    // Set default datetime to a sensible future time (e.g., 24 hours from now)
-    const now = new Date();
-    now.setHours(now.getHours() + 24); 
-    datetimeInput.value = now.toISOString().substring(0, 16);
+    /**
+     * Creates and adds a new timer to the DOM.
+     */
+    function addNewTimer() {
+        const newTimerEl = timerTemplate.cloneNode(true);
+        newTimerEl.id = '';
+        newTimerEl.classList.remove('timer-template');
+        
+        const timerItem = newTimerEl.querySelector('.timer-item');
+        timersContainer.appendChild(timerItem);
+        
+        const timerId = `timer_${Date.now()}`;
+        timerItem.dataset.id = timerId;
 
-    // Add event listeners for this specific timer
-    startBtn.addEventListener('click', () => startCountdown(timerId));
-    deleteBtn.addEventListener('click', () => deleteTimer(timerId));
-    
-    // Allow Enter key to start countdown when focus is on datetime input
-    datetimeInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault(); // Prevent default form submission if any
-            startCountdown(timerId);
+        const timerNameInput = timerItem.querySelector('.timer-name');
+        const datetimeInput = timerItem.querySelector('.datetime');
+        const now = new Date();
+        now.setDate(now.getDate() + 1);
+        datetimeInput.value = now.toISOString().substring(0, 16);
+        timerNameInput.value = `New Event`;
+
+        const startBtn = timerItem.querySelector('.start-btn');
+        startBtn.addEventListener('click', () => startCountdown(timerId));
+        
+        const stopBtn = timerItem.querySelector('.stop-btn');
+        stopBtn.addEventListener('click', () => stopCountdown(timerId));
+
+        const deleteBtn = timerItem.querySelector('.delete-timer');
+        deleteBtn.addEventListener('click', () => deleteTimer(timerId));
+        
+        datetimeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                startCountdown(timerId);
+            }
+        });
+        
+        datetimeInput.addEventListener('input', () => {
+            const errorBox = timerItem.querySelector('.error-box');
+            hideError(errorBox);
+        });
+
+        timers.push({ id: timerId, element: timerItem, interval: null, targetTime: null });
+        showToast("New timer added!");
+    }
+
+    async function deleteTimer(timerId) {
+        const timerIndex = timers.findIndex(t => t.id === timerId);
+        if (timerIndex === -1) return;
+
+        const timerName = timers[timerIndex].element.querySelector('.timer-name').value || 'This Timer';
+
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: `This will permanently delete the "${timerName}" timer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: 'var(--danger-color)',
+            background: 'var(--surface-color)',
+            color: 'var(--text-primary)'
+        });
+
+        if (result.isConfirmed) {
+            stopCountdown(timerId);
+            timers[timerIndex].element.style.animation = 'popIn 0.5s ease-out reverse';
+            timers[timerIndex].element.addEventListener('animationend', () => {
+                 timers[timerIndex].element.remove();
+            });
+           
+            timers.splice(timerIndex, 1);
         }
-    });
+    }
 
-    // Clear error message when input changes
-    datetimeInput.addEventListener('input', () => {
+    function startCountdown(timerId) {
+        unlockAudio(); // Attempt to unlock audio on first start
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer) return;
+
+        const timerElement = timer.element;
+        const datetimeInput = timerElement.querySelector('.datetime');
+        const errorBox = timerElement.querySelector('.error-box');
+
+        if (timer.interval) clearInterval(timer.interval);
         hideError(errorBox);
-    });
-    
-    // Store timer reference in the array
-    timers.push({
-        id: timerId,
-        element: timerElement,
-        interval: null // To store the setInterval ID
-    });
-}
 
-async function deleteTimer(timerId) {
-    // Find the index of the timer in the 'timers' array
-    const timerIndex = timers.findIndex(t => t.id === timerId);
-    if (timerIndex === -1) return; // Timer not found
+        const selectedDatetime = new Date(datetimeInput.value).getTime();
+        const currentTime = new Date().getTime();
 
-    const timerName = timers[timerIndex].element.querySelector('.timer-name').value || 'This Timer';
-
-    // SweetAlert2 confirmation
-    const result = await Swal.fire({
-        title: 'Are you sure?',
-        text: `You are about to delete "${timerName}". This cannot be undone!`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'No, keep it',
-        backdrop: `
-            rgba(0,0,123,0.4)
-            url("https://sweetalert2.github.io/images/nyan-cat.gif")
-            left top
-            no-repeat
-        ` // Optional: Add a fun backdrop for SweetAlert!
-    });
-
-    if (result.isConfirmed) {
-        // Clear the interval if the countdown is running for this timer
-        if (timers[timerIndex].interval) {
-            clearInterval(timers[timerIndex].interval);
+        if (!datetimeInput.value || isNaN(selectedDatetime)) {
+            showError(errorBox, 'Please select a valid date and time.');
+            return;
+        }
+        if (selectedDatetime <= currentTime) {
+            showError(errorBox, 'Please select a future date and time.');
+            return;
         }
         
-        // Remove the timer's HTML element from the DOM
-        timers[timerIndex].element.remove();
-        
-        // Remove the timer from the 'timers' array
-        timers.splice(timerIndex, 1);
+        timer.targetTime = selectedDatetime;
+        timerElement.classList.add('running');
 
-        Swal.fire(
-            'Deleted!',
-            'Your timer has been deleted.',
-            'success'
-        );
+        updateCountdown(timer);
+        timer.interval = setInterval(() => updateCountdown(timer), 1000);
     }
-}
 
-function startCountdown(timerId) {
-    // Find the timer object in the 'timers' array
-    const timer = timers.find(t => t.id === timerId);
-    if (!timer) return; // Timer not found
-    
-    // Get elements specific to this timer
-    const timerElement = timer.element;
-    const datetimeInput = timerElement.querySelector('.datetime');
-    const messageElement = timerElement.querySelector('.message');
-    const errorBox = timerElement.querySelector('.error-box'); // Get the error box
-    
-    // Clear any existing countdown interval for this timer before starting a new one
-    if (timer.interval) {
+    function stopCountdown(timerId) {
+        const timer = timers.find(t => t.id === timerId);
+        if (!timer || !timer.interval) return;
+
         clearInterval(timer.interval);
-    }
-    hideMessage(messageElement); // Hide previous completion messages
-    hideError(errorBox); // Hide previous validation errors
-
-    // Get the target datetime from the input and current time
-    const selectedDatetime = new Date(datetimeInput.value).getTime();
-    const currentTime = new Date().getTime();
-    
-    // Validate the input date and time
-    if (!datetimeInput.value) {
-        showError(errorBox, 'Please select a date and time.');
-        return;
-    }
-    
-    if (isNaN(selectedDatetime)) {
-        showError(errorBox, 'Invalid date and time selected. Please use the calendar icon.');
-        return;
+        timer.interval = null;
+        timer.element.classList.remove('running');
     }
 
-    if (selectedDatetime <= currentTime) {
-        showError(errorBox, 'Please select a future date and time.');
-        return;
+    function updateCountdown(timer) {
+        const timeRemaining = timer.targetTime - new Date().getTime();
+
+        if (timeRemaining <= 0) {
+            stopCountdown(timer.id);
+            
+            updateNumber(timer.element.querySelector('[data-unit="days"]'), '00');
+            updateNumber(timer.element.querySelector('[data-unit="hours"]'), '00');
+            updateNumber(timer.element.querySelector('[data-unit="minutes"]'), '00');
+            updateNumber(timer.element.querySelector('[data-unit="seconds"]'), '00');
+
+            const timerName = timer.element.querySelector('.timer-name').value || 'Timer';
+            showToast(`"${timerName}" has finished! 🎉`);
+            playCompletionSound();
+            return;
+        }
+
+        const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+        updateNumber(timer.element.querySelector('[data-unit="days"]'), formatTime(days));
+        updateNumber(timer.element.querySelector('[data-unit="hours"]'), formatTime(hours));
+        updateNumber(timer.element.querySelector('[data-unit="minutes"]'), formatTime(minutes));
+        updateNumber(timer.element.querySelector('[data-unit="seconds"]'), formatTime(seconds));
     }
     
-    // Immediately update the countdown display once, then set the interval
-    updateCountdown(timer, selectedDatetime);
-    timer.interval = setInterval(() => updateCountdown(timer, selectedDatetime), 1000);
-}
+    function updateNumber(containerEl, newText) {
+        const oldNumberEl = containerEl.querySelector('.number');
+        if (oldNumberEl.textContent === newText) return;
 
-function updateCountdown(timer, targetTime) {
-    // Get elements specific to this timer
-    const timerElement = timer.element;
-    const daysElement = timerElement.querySelector('.days');
-    const hoursElement = timerElement.querySelector('.hours');
-    const minutesElement = timerElement.querySelector('.minutes');
-    const secondsElement = timerElement.querySelector('.seconds');
-    const messageElement = timerElement.querySelector('.message');
-    
-    const currentTime = new Date().getTime();
-    const timeRemaining = targetTime - currentTime;
-    
-    // If countdown has ended
-    if (timeRemaining <= 0) {
-        clearInterval(timer.interval); // Stop the countdown
-        timer.interval = null; // Clear the interval reference
-        resetCountdownDisplay(daysElement, hoursElement, minutesElement, secondsElement); // Reset numbers to 00
+        const newNumberEl = document.createElement('div');
+        newNumberEl.classList.add('number', 'slide-in');
+        newNumberEl.textContent = newText;
+
+        oldNumberEl.classList.add('slide-out');
         
-        const timerName = timerElement.querySelector('.timer-name').value || 'Timer'; // Get the timer name
-        showMessage(messageElement, `${timerName} Complete! 🎉`, 'success'); // Show completion message
-        playCompletionSound(); // Play sound
-        return;
+        containerEl.appendChild(newNumberEl);
+
+        // This timeout ensures the 'slide-in' class is applied before we remove it to trigger the animation.
+        setTimeout(() => {
+            newNumberEl.classList.remove('slide-in');
+        }, 20);
+
+        oldNumberEl.addEventListener('transitionend', () => {
+            oldNumberEl.remove();
+        }, { once: true });
     }
-    
-    // Calculate time units
-    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
-    
-    // Update display with formatted time
-    daysElement.textContent = formatTime(days);
-    hoursElement.textContent = formatTime(hours);
-    minutesElement.textContent = formatTime(minutes);
-    secondsElement.textContent = formatTime(seconds);
-    
-    // Add animation to the seconds element
-    // To animate all numbers, call animateNumber for each element:
-    animateNumber(secondsElement); 
-}
 
-// Helper function to format time (add leading zero)
-function formatTime(time) {
-    return time < 10 ? `0${time}` : time;
-}
+    // --- Helper Functions ---
+    const formatTime = (time) => String(time).padStart(2, '0');
+    const showError = (el, text) => { el.textContent = text; el.classList.add('show'); };
+    const hideError = (el) => { el.classList.remove('show'); el.textContent = ''; };
+    const playCompletionSound = () => {
+        try {
+            // Using a reliable, high-quality sound for completion
+            const audio = new Audio('sounds/top.mp3');
+            audio.play().catch(e => console.error("Could not play sound:", e));
+        } catch (e) {
+            console.error("Error creating audio object:", e);
+        }
+    };
 
-// Helper function to reset countdown display to '00'
-function resetCountdownDisplay(daysEl, hoursEl, minutesEl, secondsEl) {
-    daysEl.textContent = '00';
-    hoursEl.textContent = '00';
-    minutesEl.textContent = '00';
-    secondsEl.textContent = '00';
-}
-
-// Helper function to display messages (for completion messages)
-function showMessage(element, text, type) {
-    element.textContent = text;
-    // Remove previous type classes before adding the new one
-    element.classList.remove('success', 'error'); 
-    element.classList.add(type); // 'success'
-    element.classList.add('show'); // Make the message visible and trigger slide-in animation
-}
-
-// Helper function to hide messages
-function hideMessage(element) {
-    element.classList.remove('show', 'success', 'error');
-    element.textContent = '';
-}
-
-// Helper function to display error in the new error-box
-function showError(element, text) {
-    element.textContent = text;
-    element.classList.add('show');
-}
-
-// Helper function to hide error in the new error-box
-function hideError(element) {
-    element.classList.remove('show');
-    element.textContent = '';
-}
-
-// Helper function for number animation (triggering CSS keyframe)
-function animateNumber(element) {
-    // Remove the 'animated' class to reset the animation
-    element.classList.remove('animated');
-    // Force a reflow/re-render to restart the CSS animation
-    void element.offsetWidth; // This is a common trick for force reflow
-    // Add the 'animated' class back to trigger the CSS animation
-    element.classList.add('animated');
-}
-
-// Function to play a completion sound
-function playCompletionSound() {
-    // Using a publicly available sound for demonstration.
-    // In a real project, consider hosting your own short, light sound effect.
-    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3'); 
-    audio.volume = 0.5; // Adjust volume as needed
-    audio.play().catch(e => console.error("Error playing sound:", e)); 
-}
+    // --- Initial State ---
+    addNewTimer();
+});

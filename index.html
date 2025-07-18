@@ -3,59 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown Pro</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Pro Countdown</title>
+    
+    <!-- Google Fonts for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- SweetAlert2 for stylish pop-up dialogs -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Toastify JS for notifications -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <!-- Link to your external stylesheet -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Countdown Timer</h1>
+
+    <main class="main-container">
+        <h1>Pro Countdown</h1>
+        <p class="subtitle">Create beautiful, animated countdown timers for any event. Professional, precise, and perfect for every occasion.</p>
         
-        <div class="controls">
-            <button id="addTimerBtn" class="add-timer-btn">+ Add New Timer</button>
-        </div>
+        <button id="addTimerBtn" class="add-timer-btn">+ Add New Timer</button>
         
         <div id="timersContainer" class="timers-container">
-            </div>
-    </div>
+            <!-- Timers will be dynamically inserted here -->
+        </div>
+    </main>
 
+    <!-- Template for new timers -->
     <div id="timerTemplate" class="timer-template">
         <div class="timer-item">
             <div class="timer-header">
-                <input type="text" class="timer-name" placeholder="Event Name" value="New Event">
-                <button class="delete-timer">×</button>
+                <input type="text" class="timer-name" placeholder="Name Your Event">
+                <button class="delete-timer">&times;</button>
             </div>
+            
             <div class="input-section">
-                <label>Select Date and Time:</label>
                 <input type="datetime-local" class="datetime" required>
-                <button class="start-btn">Start Countdown</button>
-                <div class="error-box"></div> 
+                <div class="button-group">
+                    <button class="start-btn">Start</button>
+                    <button class="stop-btn">Stop</button>
+                </div>
             </div>
+            <div class="error-box"></div> 
+            
             <div class="countdown-container">
                 <div class="countdown">
                     <div class="time-section">
-                        <span class="number days">00</span>
+                        <div class="number-container" data-unit="days">
+                            <div class="number">00</div>
+                        </div>
                         <span class="label">Days</span>
                     </div>
                     <div class="time-section">
-                        <span class="number hours">00</span>
+                        <div class="number-container" data-unit="hours">
+                            <div class="number">00</div>
+                        </div>
                         <span class="label">Hours</span>
                     </div>
                     <div class="time-section">
-                        <span class="number minutes">00</span>
+                        <div class="number-container" data-unit="minutes">
+                           <div class="number">00</div>
+                        </div>
                         <span class="label">Minutes</span>
                     </div>
                     <div class="time-section">
-                        <span class="number seconds">00</span>
+                        <div class="number-container" data-unit="seconds">
+                            <div class="number">00</div>
+                        </div>
                         <span class="label">Seconds</span>
                     </div>
                 </div>
             </div>
-            <div class="message"></div>
+            <!-- The old .message div has been removed -->
         </div>
     </div>
 
+    <!-- Link to your external script file -->
     <script src="script.js"></script>
 </body>
 </html>

@@ -6,6 +6,13 @@ const timerTemplate = document.getElementById('timerTemplate');
 // Timer management
 let timers = []; // Stores objects for each timer: { id, element, interval }
 
+// Global Audio Object
+// It's better to create a single Audio object and reuse it,
+// instead of creating a new one every second or on every completion.
+const completionAudio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+completionAudio.volume = 0.5; // Adjust volume as needed
+completionAudio.preload = 'auto'; // Attempt to preload the audio for smoother playback
+
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', () => {
     // Ensure initial timer is added after DOM is fully loaded
@@ -249,10 +256,13 @@ function animateNumber(element) {
 }
 
 // Function to play a completion sound
+// This function is now simplified as the audio object is global and preloaded
 function playCompletionSound() {
-    // Using a publicly available sound for demonstration.
-    // In a real project, consider hosting your own short, light sound effect.
-    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3'); 
-    audio.volume = 0.5; // Adjust volume as needed
-    audio.play().catch(e => console.error("Error playing sound:", e)); 
+    completionAudio.currentTime = 0; // Rewind to start in case it was already playing
+    completionAudio.play().catch(e => {
+        // Catch and log any errors, typically related to browser autoplay policies
+        console.error("Audio playback failed:", e);
+        // You could also show a user-friendly message here, e.g.:
+        // Swal.fire('Sound Blocked', 'Your browser prevented the completion sound from playing automatically. Please enable media autoplay for this site.', 'info');
+    });
 }
